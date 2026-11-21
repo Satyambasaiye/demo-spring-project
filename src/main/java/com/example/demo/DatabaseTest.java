@@ -17,6 +17,11 @@ public class DatabaseTest {
                 "SELECT current_database()",
                 String.class
             );
+            String result1 = jdbcTemplate.queryForObject(
+                "SELECT current_schema()",
+                String.class
+            );
+            System.out.println("Connected Schema: " + result1);
 
             System.out.println("Connected Database: " + result);
         };
