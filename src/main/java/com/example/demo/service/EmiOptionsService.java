@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.demo.client.AuthApiClient;
 import com.example.demo.client.CreditProviderApiClient;
 import com.example.demo.client.ProductApiClient;
 import com.example.demo.dto.CreditProviderResponse;
@@ -25,22 +26,26 @@ public class EmiOptionsService {
     private final ProductApiClient productApiClient;
     private final CreditProviderApiClient creditProviderApiClient;
     private final EmiCalculator emiCalculator;
+    private final AuthApiClient authApiClient;
 
     public EmiOptionsService(
             ProductApiClient productApiClient,
             CreditProviderApiClient creditProviderApiClient,
-            EmiCalculator emiCalculator) {
+            EmiCalculator emiCalculator,
+            AuthApiClient authApiClient) {
         this.productApiClient = productApiClient;
         this.creditProviderApiClient = creditProviderApiClient;
         this.emiCalculator = emiCalculator;
+        this.authApiClient = authApiClient;
     }
 
     public EmiOptionsResponse getEmiOptions(UUID productId) {
-        ProductResponse product = productApiClient.getProduct(productId);
+        String token = authApiClient.getBearerToken();
+        ProductResponse product = productApiClient.getProduct(productId, token);
         validateProduct(productId, product);
 
         List<CreditProviderResponse> providers =
-                creditProviderApiClient.getProviders(product.price());
+                creditProviderApiClient.getProviders(product.price(), token);
         List<ProviderOptions> providerOptions = new ArrayList<>();
 
         for (CreditProviderResponse provider : providers) {

@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import com.example.demo.entity.CreditProviders;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 

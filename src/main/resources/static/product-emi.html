@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product EMI options</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f3f6fc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 10% 0%, rgb(213 224 255 / 70%), transparent 34rem),
+        #f3f6fc;
+    }
+
+    main {
+      width: min(100% - 32px, 960px);
+      margin: 0 auto;
+      padding: 56px 0 72px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.9rem, 4vw, 2.6rem);
+      letter-spacing: -.04em;
+    }
+
+    h2 { margin: 0; font-size: 1.15rem; }
+    p { color: #667085; }
+
+    .page-header { margin-bottom: 28px; }
+    .page-header p { margin: 0; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #315ee8;
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .panel, .provider-card, .offer {
+      background: #fff;
+      border: 1px solid #e4e8f0;
+      box-shadow: 0 12px 32px rgb(23 32 51 / 5%);
+    }
+
+    .panel { padding: 24px; }
+
+    #status { min-height: 24px; margin: 0; }
+    #status:empty { display: none; }
+    #status.error { color: #b42318; }
+    #status.success { color: #087443; }
+
+    #product { margin-top: 18px; }
+    .product-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 24px;
+      border-radius: 18px;
+    }
+
+    .product-summary p { margin: 0; }
+    .price { color: #172033; font-size: 1.45rem; font-weight: 750; }
+
+    #providers { display: grid; gap: 18px; margin-top: 20px; }
+    .provider-card { padding: 22px; border-radius: 18px; }
+    .provider-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .badge {
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #3150aa;
+      background: #edf1ff;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+
+    .offers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .offer {
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      border-radius: 15px;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .offer:hover {
+      transform: translateY(-2px);
+      border-color: #b8c8ff;
+      box-shadow: 0 16px 36px rgb(23 32 51 / 9%);
+    }
+
+    .offer.selected {
+      border-color: #315ee8;
+      box-shadow: 0 0 0 2px rgb(49 94 232 / 12%), 0 16px 36px rgb(23 32 51 / 8%);
+    }
+
+    .offer h3 { margin: 0 0 10px; font-size: .94rem; color: #566176; }
+    .monthly { margin: 0 0 16px; color: #172033; font-size: 1.35rem; font-weight: 750; }
+    dl {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px 12px;
+      margin: 0 0 18px;
+      font-size: .88rem;
+    }
+
+    dt { color: #667085; }
+    dd { margin: 0; text-align: right; font-weight: 550; }
+
+    .choose-plan {
+      width: 100%;
+      min-height: 44px;
+      margin-top: auto;
+      padding: 10px 14px;
+      border: 1px solid #315ee8;
+      border-radius: 10px;
+      color: #fff;
+      background: #315ee8;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background .18s ease, border-color .18s ease;
+    }
+
+    .choose-plan:hover { border-color: #244bc4; background: #244bc4; }
+    .choose-plan:focus-visible { outline: 3px solid rgb(49 94 232 / 30%); outline-offset: 2px; }
+    .choose-plan[aria-pressed="true"] { border-color: #087443; background: #087443; }
+
+    @media (max-width: 520px) {
+      main { padding: 32px 0 48px; }
+      .panel, .provider-card { padding: 18px; }
+      .product-summary { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <p class="eyebrow">Flexible payments</p>
+      <h1>EMI options</h1>
+      <p>Available monthly payment options for the selected product.</p>
+    </header>
+
+    <section aria-label="EMI options status">
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="product" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const status = document.querySelector("#status");
+    const productContainer = document.querySelector("#product");
+    const providersContainer = document.createElement("div");
+    providersContainer.id = "providers";
+
+    function formatMoney(value, currency) {
+      const amount = Number(value);
+      if (!Number.isFinite(amount)) return `${value ?? "—"} ${currency ?? ""}`.trim();
+
+      try {
+        return new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: currency || "USD"
+        }).format(amount);
+      } catch {
+        return `${currency || ""} ${amount.toFixed(2)}`.trim();
+      }
+    }
+
+    function addDetail(list, label, value) {
+      const term = document.createElement("dt");
+      term.textContent = label;
+      const detail = document.createElement("dd");
+      detail.textContent = value;
+      list.append(term, detail);
+    }
+
+    function renderOffers(data) {
+      productContainer.replaceChildren();
+      providersContainer.replaceChildren();
+
+      const summary = document.createElement("section");
+      summary.className = "panel product-summary";
+
+      const name = document.createElement("h2");
+      name.textContent = data.productName || "Selected product";
+
+      const price = document.createElement("p");
+      price.className = "price";
+      price.textContent = formatMoney(data.productPrice, data.currency);
+      summary.append(name, price);
+      productContainer.append(summary, providersContainer);
+
+      const providers = Array.isArray(data.providers) ? data.providers : [];
+      if (providers.length === 0) {
+        status.textContent = "No EMI plans are currently available for this product.";
+        status.className = "success";
+        return;
+      }
+
+      providers.forEach((provider) => {
+        const card = document.createElement("article");
+        card.className = "provider-card";
+
+        const heading = document.createElement("div");
+        heading.className = "provider-heading";
+
+        const providerName = document.createElement("h2");
+        providerName.textContent = provider.providerName || "EMI provider";
+        heading.append(providerName);
+
+        if (provider.noCostEmiSupported) {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = "No-cost EMI available";
+          heading.append(badge);
+        }
+
+        const offers = document.createElement("div");
+        offers.className = "offers";
+        (Array.isArray(provider.offers) ? provider.offers : []).forEach((offer) => {
+          const offerCard = document.createElement("article");
+          offerCard.className = "offer";
+
+          const tenure = document.createElement("h3");
+          tenure.textContent = `${offer.tenureMonths} months`;
+
+          const monthly = document.createElement("p");
+          monthly.className = "monthly";
+          monthly.textContent = `${formatMoney(offer.monthlyEmi, data.currency)} / month`;
+
+          const details = document.createElement("dl");
+          addDetail(details, "Annual interest", `${offer.annualInterestRate}%`);
+          addDetail(details, "Total interest", formatMoney(offer.totalInterest, data.currency));
+          addDetail(details, "Total payable", formatMoney(offer.totalPayable, data.currency));
+          addDetail(details, "Processing fee", formatMoney(offer.processingFee, data.currency));
+
+          const chooseButton = document.createElement("button");
+          chooseButton.type = "button";
+          chooseButton.className = "choose-plan";
+          chooseButton.textContent = "Choose this plan";
+          chooseButton.setAttribute("aria-pressed", "false");
+          chooseButton.addEventListener("click", () => {
+            document.querySelectorAll(".offer.selected").forEach((selectedCard) => {
+              selectedCard.classList.remove("selected");
+              const selectedButton = selectedCard.querySelector(".choose-plan");
+              selectedButton.textContent = "Choose this plan";
+              selectedButton.setAttribute("aria-pressed", "false");
+            });
+
+            offerCard.classList.add("selected");
+            chooseButton.textContent = "Plan selected";
+            chooseButton.setAttribute("aria-pressed", "true");
+            status.textContent = `${provider.providerName || "EMI provider"} ${offer.tenureMonths}-month plan selected.`;
+            status.className = "success";
+          });
+
+          offerCard.append(tenure, monthly, details, chooseButton);
+          offers.append(offerCard);
+        });
+
+        card.append(heading, offers);
+        providersContainer.append(card);
+      });
+
+      status.textContent = "";
+      status.className = "";
+    }
+
+    async function loadEmiOptions(productId) {
+      status.textContent = "Loading EMI options…";
+      status.className = "";
+      productContainer.replaceChildren();
+
+      try {
+        const response = await fetch(
+          `/api/v1/products/${encodeURIComponent(productId)}/emi-options`,
+          { headers: { Accept: "application/json" } }
+        );
+
+        if (!response.ok) {
+          let message = `Unable to load EMI options (HTTP ${response.status}).`;
+          try {
+            const error = await response.json();
+            if (error.detail) message = error.detail;
+            else if (error.message) message = error.message;
+          } catch {
+            // Keep the HTTP status message when the response is not JSON.
+          }
+          throw new Error(message);
+        }
+
+        renderOffers(await response.json());
+      } catch (error) {
+        status.textContent = error.message || "A network error occurred. Please try again.";
+        status.className = "error";
+      }
+    }
+
+    const productId = new URLSearchParams(window.location.search).get("productId")?.trim();
+    console.log("Product ID:", productId);
+    console.log("Current URL:", window.location.href);
+    if (productId) {
+      loadEmiOptions(productId);
+    } else {
+      status.textContent = "No product ID was provided in the page URL.";
+      status.className = "error";
+    }
+  </script>
+</body>
+</html>

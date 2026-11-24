@@ -30,7 +30,7 @@ public class CreditProviderApiClient {
         this.path = path;
     }
 
-    public List<CreditProviderResponse> getProviders(BigDecimal amount) {
+    public List<CreditProviderResponse> getProviders(BigDecimal amount, String token) {
         try {
             logger.debug("Sending credit provider request: GET {}?amount={}", path, amount);
             System.out.println("Sending credit provider request: GET " + path + "?amount=" + amount);
@@ -38,6 +38,7 @@ public class CreditProviderApiClient {
                     .uri(uriBuilder -> uriBuilder.path(path)
                             .queryParam("amount", amount)
                             .build())
+                    .headers(headers -> headers.setBearerAuth(token))
                     .retrieve()
                     .body(new ParameterizedTypeReference<>() {});
 

@@ -29,13 +29,14 @@ public class ProductApiClient {
         this.path = path;
     }
 
-    public ProductResponse getProduct(UUID productId) {
+    public ProductResponse getProduct(UUID productId, String token) {
         try {
             logger.debug("Sending product request: GET {}?productId={}", path, productId);
             ProductResponse product = restClient.get()
                     .uri(uriBuilder -> uriBuilder.path(path)
                             .queryParam("productId", productId)
                             .build())
+                    .headers(headers -> headers.setBearerAuth(token))
                     .retrieve()
                     .body(ProductResponse.class);
                             logger.info("Raw Product API Response: {}", product);

@@ -9,6 +9,12 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RestClientConfiguration {
     @Bean
+    @Qualifier("authRestClient")
+    RestClient authRestClient() {
+        return RestClient.builder().build();
+    }
+
+    @Bean
     @Qualifier("productRestClient")
     RestClient productRestClient(
             @Value("${app.services.product.base-url}") String baseUrl) {
