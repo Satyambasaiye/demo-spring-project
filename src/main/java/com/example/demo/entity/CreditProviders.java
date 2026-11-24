@@ -55,7 +55,7 @@ public class CreditProviders {
 
     @Builder.Default
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "supported_tenures", columnDefinition = "int[]", nullable = false)
+    @Column(name = "supported_tenures", nullable = false)
     private List<Integer> supportedTenures = List.of(3, 6, 9, 12);
 
     // Interest & Fee Defaults
@@ -78,7 +78,7 @@ public class CreditProviders {
     // Gateway Integration & Status
     @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "gateway_config", columnDefinition = "jsonb")
+    @Column(name = "gateway_config")
     private Map<String, Object> gatewayConfig = new HashMap<>();
 
     @Builder.Default

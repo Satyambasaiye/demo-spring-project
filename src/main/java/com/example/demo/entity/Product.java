@@ -59,7 +59,7 @@ public class Product {
     @Column(name = "cost_price", precision = 10, scale = 2)
     private BigDecimal costPrice;
 
-    @Column(name = "currency", nullable = false, length = 3, columnDefinition = "bpchar(3)")
+    @Column(name = "currency", nullable = false, length = 3)
     private String currency = "INR";
 
     @Column(name = "stock_quantity", nullable = false)
@@ -68,12 +68,12 @@ public class Product {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "gallery_urls", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "gallery_urls")
     private String[] galleryUrls;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "attributes", columnDefinition = "jsonb")
+    @Column(name = "attributes")
     private Map<String, Object> attributes;
 
     @Column(name = "is_active", nullable = false)

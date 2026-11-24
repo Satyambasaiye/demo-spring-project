@@ -14,14 +14,10 @@ public class DatabaseTest {
         return args -> {
 
             String result = jdbcTemplate.queryForObject(
-                "SELECT current_database()",
+                "SELECT DATABASE()",
                 String.class
             );
-            String result1 = jdbcTemplate.queryForObject(
-                "SELECT current_schema()",
-                String.class
-            );
-            System.out.println("Connected Schema: " + result1);
+            
 
             System.out.println("Connected Database: " + result);
         };
